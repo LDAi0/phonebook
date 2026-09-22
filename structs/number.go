@@ -1,21 +1,22 @@
 package structs
 
+import "time"
+
 type Number struct{
 	PhoneNumber string
 	Name string
 	Group string
 
-	DateAdded string
+	DateAdded time.Time
 }
 
 func NewNumber (phoneNumber string,
-	name string, group string,
-	dateAdded string) Number{
+	name string, group string) Number{
 		return Number{
 			PhoneNumber: phoneNumber,
 			Name: name,
 			Group: group,
-			DateAdded: dateAdded,
+			DateAdded: time.Now(),
 		}
 }
 
