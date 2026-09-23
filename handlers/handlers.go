@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"github.com/gorilla/mux"
 )
 
 type HTTPhandlers struct{
@@ -27,6 +28,16 @@ func NewHTTPhandlers(book *structs.Book) *HTTPhandlers{
 }
 
 
+func Write(status int, w http.ResponseWriter, b []byte){
+	if _, err := w.Write(b); err!=nil{
+		fmt.Println("failed to write http response: ", err)
+		return
+	} else {
+		w.WriteHeader(status)
+		return
+	}
+}
+
 func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) {
 	var numberdto NumberDTO
 	if err := json.NewDecoder(r.Body).Decode(&numberdto); err != nil{
@@ -35,7 +46,7 @@ func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) 
 		return 
 	}
 	
-	if err:= numberdto.Validate(); err!=nil{
+	if err:= numberdto.ValidateForCreate(); err!=nil{
 		errdto := makeErrorDto(err)
 		http.Error(w,errdto.ToString(),http.StatusBadRequest)
 		return 
@@ -53,11 +64,43 @@ func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) 
 	b, err := json.MarshalIndent(number,"","    ")
 	if err!=nil{
 		http.Error(w,"UnknownPanicErrorInMarshalToJsonErrorStruct",http.StatusInternalServerError)
-	}
-	
-	w.WriteHeader(http.StatusCreated)
-	if _, err := w.Write(b); err!=nil{
-		fmt.Println("failed to write http response: ", err)
 		return
 	}
+	
+	Write(http.StatusCreated,w,b)
+}
+
+
+
+func (h *HTTPhandlers) HandlerGetNumber(w http.ResponseWriter, r *http.Request) {
+	PhoneNumber := mux.Vars(r)["title"]
+	number, err :=h.book.GetNumber(PhoneNumber)
+	if err!= nil{
+		errdto:=makeErrorDto(err)
+		if errors.Is(err,structs.ErrNumberNotFound){
+			http.Error(w,errdto.ToString(),http.StatusBadRequest)
+			return
+		} else {
+			http.Error(w,errdto.ToString(),http.StatusInternalServerError)
+			return
+		}
+	}
+	b,err:=json.MarshalIndent(number,"","    ")
+	if err!=nil{
+		http.Error(w,"UnknownPanicErrorInMarshalToJsonErrorStruct",http.StatusInternalServerError)
+		return
+	}
+
+
+	Write(200,w,b)
+}
+
+func (h *HTTPhandlers) HandlerGetNumbers(w http.ResponseWriter, r *http.Request) {
+	numbers:=h.book.GetNumbers()
+	b,err:=json.MarshalIndent(numbers,"","    ")
+	if err!=nil{
+		http.Error(w,"UnknownPanicErrorInMarshalToJsonErrorStruct",http.StatusInternalServerError)
+		return
+	}
+	Write(200,w,b)
 }

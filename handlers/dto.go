@@ -12,12 +12,19 @@ type NumberDTO struct {
 	Group string
 }
 
-func (nd *NumberDTO) Validate() error{
+func (nd *NumberDTO) ValidateForCreate() error{
 	if nd.PhoneNumber == ""{
 		return errors.New("PhoneNumber is empty")
 	}
 	if nd.Name == ""{
 		return errors.New("Name is empty")
+	}
+	return nil
+}
+
+func (nd *NumberDTO) ValidateForGet() error{
+	if nd.PhoneNumber == ""{
+		return errors.New("PhoneNumber is empty")
 	}
 	return nil
 }
