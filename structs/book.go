@@ -5,7 +5,9 @@ type Book struct{
 }
 
 func NewBook() Book{
-    return Book{}
+    return Book{
+        numbers: make(map[string]Number),
+    }
 }
 
 func (b *Book) AddNumber (number Number) error{
