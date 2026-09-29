@@ -1,17 +1,20 @@
 package handlers
 
 import (
+	"Phonebook/database"
 	"Phonebook/structs"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
+
 	"github.com/gorilla/mux"
 )
 
 type HTTPhandlers struct{
-	book *structs.Book
+	db *database.Db
 }
 
 func makeErrorDto(err error) ErrorDTO{
@@ -21,9 +24,9 @@ func makeErrorDto(err error) ErrorDTO{
 		}
 }
 
-func NewHTTPhandlers(book *structs.Book) *HTTPhandlers{
+func NewHTTPhandlers(db *database.Db) *HTTPhandlers{
 	return &HTTPhandlers{
-		book: book,
+		db: db,
 	}
 }
 
@@ -36,6 +39,10 @@ func Write(status int, w http.ResponseWriter, b []byte){
 		w.WriteHeader(status)
 		return
 	}
+}
+
+func (h *HTTPhandlers) HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) {
@@ -52,15 +59,17 @@ func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) 
 		return 
 	}
 	number:=structs.NewNumber(numberdto.PhoneNumber,numberdto.Name,numberdto.Group)
-	if err:=h.book.AddNumber(number); err!=nil{
-		errdto:=makeErrorDto(err)
-		if errors.Is(err, structs.ErrNumberAlreadyExist){
-			http.Error(w,errdto.ToString(),http.StatusConflict)
-		} else {
-			http.Error(w,errdto.ToString(),http.StatusInternalServerError)
-		}
-		return 
-	}
+	query:= ``
+	h.db.Conn.Exec(context.Background(),query)
+	// if err:=h.book.AddNumber(number); err!=nil{
+	// 	errdto:=makeErrorDto(err)
+	// 	if errors.Is(err, structs.ErrNumberAlreadyExist){
+	// 		http.Error(w,errdto.ToString(),http.StatusConflict)
+	// 	} else {
+	// 		http.Error(w,errdto.ToString(),http.StatusInternalServerError)
+	// 	}
+	// 	return 
+	// }
 	b, err := json.MarshalIndent(number,"","    ")
 	if err!=nil{
 		http.Error(w,"UnknownPanicErrorInMarshalToJsonErrorStruct",http.StatusInternalServerError)

@@ -7,9 +7,23 @@ import (
 )
 
 type NumberDTO struct {
+	id int
 	PhoneNumber string
 	Name string
 	Group string
+}
+
+type UserDTO struct{
+	id int
+	name string
+	address string
+}
+
+func (us *UserDTO) ValidateForRegister() error{
+	if us.name == ""{
+		return errors.New("Name of User is empty")
+	}
+	return nil
 }
 
 func (nd *NumberDTO) ValidateForCreate() error{
