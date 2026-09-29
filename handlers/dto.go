@@ -16,6 +16,7 @@ type NumberDTO struct {
 type UserDTO struct{
 	id int
 	name string
+	password string
 	address string
 }
 

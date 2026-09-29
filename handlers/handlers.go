@@ -42,7 +42,32 @@ func Write(status int, w http.ResponseWriter, b []byte){
 }
 
 func (h *HTTPhandlers) HandlerRegisterUser(w http.ResponseWriter, r *http.Request) {
-	
+	var userdto UserDTO
+	if err := json.NewDecoder(r.Body).Decode(&userdto); err != nil{
+		errdto := makeErrorDto(err)
+		http.Error(w,errdto.ToString(),http.StatusBadRequest)
+		return
+	}
+	if err := userdto.ValidateForRegister(); err!=nil{
+		errdto:=makeErrorDto(err)
+		http.Error(w,errdto.ToString(),http.StatusBadRequest)
+		return
+	}
+	user := structs.NewUser(userdto.name,userdto.password,userdto.address)
+	query := `INSERT INTO users (name,address,password)
+	VALUES ($1,$2,$3)`
+	if _, err := h.db.Conn.Exec(context.Background(),query,user.Name,user.Address,user.Password); err!=nil{
+		errdto:=makeErrorDto(err)
+		http.Error(w,errdto.ToString(),http.StatusInternalServerError)
+		return
+	}
+	b, err := json.MarshalIndent(user,"","	")
+	if err != nil{
+		http.Error(w,"UnknownPanicErrorInMarshalToJsonErrorStruct",http.StatusInternalServerError)
+		return
+	}
+	Write(201,w,b)
+
 }
 
 func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) {
@@ -59,8 +84,9 @@ func (h *HTTPhandlers) HandlerAddNumber(w http.ResponseWriter, r *http.Request) 
 		return 
 	}
 	number:=structs.NewNumber(numberdto.PhoneNumber,numberdto.Name,numberdto.Group)
-	query:= ``
-	h.db.Conn.Exec(context.Background(),query)
+	query:= `INSERT INTO numbers (phone_number,name,group_name,date_added)
+	VALUES ($1,$2,$3,$4)`
+	h.db.Conn.Exec(context.Background(),query,number.PhoneNumber,number.Name,number.Group,number.DateAdded)
 	// if err:=h.book.AddNumber(number); err!=nil{
 	// 	errdto:=makeErrorDto(err)
 	// 	if errors.Is(err, structs.ErrNumberAlreadyExist){
