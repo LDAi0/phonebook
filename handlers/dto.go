@@ -7,25 +7,30 @@ import (
 )
 
 type NumberDTO struct {
-	id int
+	Id int
 	PhoneNumber string
 	Name string
 	Group string
 }
 
 type UserDTO struct{
-	id int
-	name string
-	password string
-	address string
+	Id int
+	Name string `json:"name"`
+	Password string `json:"password"`
+	Address string `json:"address"`
 }
 
 func (us *UserDTO) ValidateForRegister() error{
-	if us.name == ""{
+	if us.Name == ""{
 		return errors.New("Name of User is empty")
+	}
+	if us.Password==""{
+		return errors.New("Password of User is empty")
 	}
 	return nil
 }
+
+
 
 func (nd *NumberDTO) ValidateForCreate() error{
 	if nd.PhoneNumber == ""{
